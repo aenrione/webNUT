@@ -1,0 +1,8 @@
+---
+version: '3.7'
+services:
+  webnut:
+    build: .
+    ports:
+      - "6543:6543"
+    env_file: "webapp.env"

@@ -1,0 +1,103 @@
+<div id="charts" class="alert alert-info tabcontent" role="alert">
+    <h3>Battery Status</h3>
+    <canvas id="batteryChart" width="400" height="200"></canvas>
+
+    <h3>Load Status</h3>
+    <canvas id="loadChart" width="400" height="200"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="text/javascript">
+    $(function(){
+        var batteryCharge = ${ups_vars['battery.charge'][0]};
+        var batteryVoltage = ${ups_vars['battery.voltage'][0]};
+        var load = ${ups_vars['ups.load'][0]};
+        const green = '#28a745';
+        const yellow = '#ffc107';
+        const red = '#dc3545';
+        const blue = '#007bff';
+
+        function getColorForCharge(charge) {
+            if (charge < 50) return red;        // Low battery
+            if (charge < 80) return yellow;     // Medium battery
+            return green;                       // High battery
+        }
+
+        function getColorForLoad(load) {
+            if (load > 80) return red;          // High load
+            if (load > 40) return yellow;       // Medium load
+            return green;                       // Low load
+        }
+
+        function getColorForVoltage(voltage) {
+            if (voltage < 11 || voltage > 14.5) return red;       // Low voltage or overcharged
+            return blue;                        // Safe voltage
+        }
+
+        // Battery Chart
+        var ctxBattery = document.getElementById('batteryChart').getContext('2d');
+        var batteryChart = new Chart(ctxBattery, {
+            type: 'bar',
+            data: {
+                labels: ['Charge (%)', 'Voltage (V)'],
+                datasets: [{
+                    label: 'Battery Status',
+                    data: [batteryCharge, batteryVoltage],
+                    backgroundColor: [
+                        getColorForCharge(batteryCharge),
+                        getColorForVoltage(batteryVoltage)
+                    ],
+                    borderColor: [
+                        getColorForCharge(batteryCharge),
+                        getColorForVoltage(batteryVoltage)
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100, 
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Load Chart
+        var ctxLoad = document.getElementById('loadChart').getContext('2d');
+        var loadChart = new Chart(ctxLoad, {
+            type: 'bar',
+            data: {
+                labels: ['Load (%)'],
+                datasets: [{
+                    label: 'UPS Load',
+                    data: [load],
+                    backgroundColor: [getColorForLoad(load)],
+                    borderColor: [getColorForLoad(load)],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    });
+</script>
+

@@ -1,5 +1,20 @@
+from pyramid.events import ApplicationCreated, BeforeRender, NewRequest, subscriber
 from pyramid.config import Configurator
 from pyramid.httpexceptions import HTTPNotFound
+from .webnutclient import WebNUTClient
+from . import config
+
+@subscriber(ApplicationCreated)
+def app_created_subscriber(event):
+    """
+    When the Pyramid application is created, start the WebNUTClient listener.
+    """
+    request = event.app.registry
+    nut_client = WebNUTClient(host=config.server, port=config.port)
+    nut_client.start_event_listener()
+    request.nut_client = nut_client
+    print("Started UPS event listener.")
+
 
 
 def main(global_config, **settings):
@@ -15,3 +30,11 @@ def main(global_config, **settings):
             context='pyramid.exceptions.NotFound')
     config.scan()
     return config.make_wsgi_app()
+
+@subscriber(NewRequest)
+def request_event_listener(event):
+    """
+    Attach NUTClient to every request for easy access.
+    """
+    event.request.nut_client = event.request.registry.nut_client
+

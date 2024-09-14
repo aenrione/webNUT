@@ -8,13 +8,16 @@ class WebNUT(object):
         self.username = username
         self.password = password
 
-    def get_ups_list(self):
+    def get_ups_list(self, limit=None):
         try:
             with nut2.PyNUTClient(host=self.server, port=self.port,
                     login=self.username, password=self.password) as client:
                 ups_dict = client.list_ups()
                 ups_list = dict()
+                count = 0
                 for ups in ups_dict:
+                    if limit is not None and count >= limit:
+                        break
                     try:
                         ups_vars = client.list_vars(ups)
                     except nut2.PyNUTError:
@@ -25,6 +28,7 @@ class WebNUT(object):
                         'status': self._get_ups_status(ups_vars),
                         'battery': ups_vars['battery.charge'],
                     }
+                    count += 1
                 return ups_list
         except nut2.PyNUTError:
             return dict()
