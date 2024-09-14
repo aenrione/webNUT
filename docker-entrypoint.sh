@@ -31,7 +31,7 @@ echo "polling_interval = '$polling_interval'" >> /app/webNUT/webnut/config.py
 echo "battery_difference = '$battery_difference'" >> /app/webNUT/webnut/config.py
 
 # Telegram
-echo "telegram_bot_token = '$telegram'" >> /app/webNUT/webnut/config.py
+echo "telegram_bot_token = '$telegram_bot_token'" >> /app/webNUT/webnut/config.py
 echo "telegram_chat_id = '$telegram_chat_id'" >> /app/webNUT/webnut/config.py
 
 # Email - SMTP

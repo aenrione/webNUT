@@ -13,7 +13,6 @@ requires = [
     'waitress',
     'nut2',
     'requests',
-    'smtplib',
     ]
 
 setup(name='webNUT',

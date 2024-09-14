@@ -18,9 +18,10 @@ class WebNUTClient(PyNUTClient):
         self._notification_thread = None
         self._last_status = None
         self._last_battery_charge = None
+        self._battery_difference = int(config.battery_difference)
         self.notifiers = []
         self.ups_dict = self.list_ups()
-        self._event_check_interval = config.polling_interval
+        self._event_check_interval = int(config.polling_interval)
         self._set_notifiers()
         self._connect()
 
@@ -55,10 +56,8 @@ class WebNUTClient(PyNUTClient):
                             ups_status = self._get_variable(ups, "ups.status")
                             battery_charge = self._get_variable(ups, "battery.charge")
 
-                            # Check if UPS status has changed
                             self._handle_ups_status(ups, ups_status)
 
-                            # Check if battery charge dropped
                             self._handle_battery_charge(ups, battery_charge)
                     
                     time.sleep(self._event_check_interval)
@@ -88,7 +87,9 @@ class WebNUTClient(PyNUTClient):
         """
         Handles battery charge changes.
         """
-        if battery_charge and self._last_battery_charge and abs(battery_charge - self._last_battery_charge) >= config.battery_difference:
+        battery_charge = int(battery_charge)
+        self._last_battery_charge = self._last_battery_charge or battery_charge
+        if battery_charge and self._last_battery_charge and abs(battery_charge - self._last_battery_charge) >= self._battery_difference:
             event_message = f"Battery charge dropped to {battery_charge}%"
             logging.info(f"{ups}: {event_message}")
             self._forward_event(f"{ups}: {event_message}")
@@ -114,11 +115,13 @@ class WebNUTClient(PyNUTClient):
         telegram_builder = TelegramBuilder(telegram_bot_token, telegram_chat_id)
         if telegram_builder.is_valid():
             self.notifiers.append(telegram_builder)
+            logging.info("Telegram notifier is set up.")
 
         # Use the Email notification builder
         email_builder = EmailBuilder(config.smtp_server, config.smtp_port, config.smtp_email, config.smtp_receiver, config.smtp_password, config.smtp_protocol)
         if email_builder.is_valid():
             self.notifiers.append(email_builder)
+            logging.info("Email notifier is set up.")
 
     def _forward_event(self, message):
         """
