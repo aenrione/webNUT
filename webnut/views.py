@@ -5,20 +5,13 @@ from pyramid.view import view_config
 from .webnut import WebNUT
 from . import config
 
-NAVBAR_LIST_LIMIT = 4
-
 class NUTViews(object):
     def __init__(self, request):
         self.request = request
         renderer = get_renderer("templates/layout.pt")
         self.layout = renderer.implementation().macros['layout']
-        self.webnut = WebNUT(config.server, config.port,
+        self.webnut = WebNUT(config.server, int(config.port),
                 config.username, config.password)
-
-    def _get_layout_context(self):
-        return {
-            'ups_navbar': self.webnut.get_ups_list(limit=NAVBAR_LIST_LIMIT)
-        }
 
     @view_config(route_name='home', renderer='templates/index.pt')
     def home(self):
@@ -26,7 +19,6 @@ class NUTViews(object):
                     title='UPS Devices',
                     ups_list=self.webnut.get_ups_list()
                 )
-        context.update(self._get_layout_context())
         return context
 
     @view_config(route_name='ups_view', renderer='templates/ups_view.pt')
@@ -48,7 +40,6 @@ class NUTViews(object):
                 charts=charts,
                 table=table
             )
-            context.update(self._get_layout_context())
             return context
         except KeyError:
             raise NotFound

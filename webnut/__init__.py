@@ -2,7 +2,10 @@ from pyramid.events import ApplicationCreated, BeforeRender, NewRequest, subscri
 from pyramid.config import Configurator
 from pyramid.httpexceptions import HTTPNotFound
 from .webnutclient import WebNUTClient
+from .webnut import WebNUT
 from . import config
+
+NAVBAR_LIST_LIMIT = 4
 
 @subscriber(ApplicationCreated)
 def app_created_subscriber(event):
@@ -38,3 +41,8 @@ def request_event_listener(event):
     """
     event.request.nut_client = event.request.registry.nut_client
 
+
+@subscriber(BeforeRender)
+def add_global_context(event):
+    webnut = WebNUT(config.server, int(config.port), config.username, config.password)
+    event['ups_navbar'] = webnut.get_ups_list(limit=NAVBAR_LIST_LIMIT)

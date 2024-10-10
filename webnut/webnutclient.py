@@ -69,19 +69,28 @@ class WebNUTClient(PyNUTClient):
                 continue
 
     def _handle_ups_status(self, ups, ups_status):
-        """
-        Handles UPS status changes.
-        """
-        if ups_status not in (self._last_status, f"{self._last_status} CHRG"):
-            if ups_status in "OL CHRG":
-                event_message = "UPS is online"
-            elif ups_status == "OB":
-                event_message = "UPS is on battery"
-            else:
-                event_message = f"UPS status changed from {self._last_status} to {ups_status}"
-            logging.info(f"{ups}: {event_message}")
-            self._forward_event(f"{ups}: {event_message}")
-            self._last_status = ups_status
+         """
+         Handles UPS status changes.
+         Handles UPS status changes and avoids redundant messages when the UPS is still online (status includes "OL").
+         """
+         is_current_online = "OL" in ups_status
+         was_last_online = "OL" in self._last_status if self._last_status else False
+ 
+         if is_current_online and was_last_online:
+             return
+ 
+         if ups_status != self._last_status:
+             if "OL" in ups_status:
+                 event_message = "UPS is online"
+             elif "OB" in ups_status:
+                 event_message = "UPS is on battery"
+             else:
+                 event_message = f"UPS status changed from {self._last_status} to {ups_status}"
+             
+             logging.info(f"{ups}: {event_message}")
+             self._forward_event(f"{ups}: {event_message}")
+ 
+             self._last_status = ups_status
 
     def _handle_battery_charge(self, ups, battery_charge):
         """
